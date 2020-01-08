@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)http://www.pages.drexel.edu/~mar528/Pet.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><style></style><title>Snail</title></head><body style="cursor: default;">
+<style> 
+#heartContainer
+{
+	width: 500px;
+	height: 55.5px;
+}
+#container 
+{
+	width: 500px;
+	height: 500px;
+	border: 1px solid black;
+}
+#tileOne, #tileFive
+{
+	background-color: #transparent;
+	width: 200px;
+	height: 50px;
+	float: left;
+}
+#tileTwo, #tileFour
+{
+	background-color: #transparent;
+	width: 50px;
+	height: 100px;
+	float: left;
+}
+#tileThree
+{
+	background-color: #transparent;
+	width: 100px;
+	height: 100px;
+	float: left;
+	margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+#box
+{
+	background-image: url("https://i.imgur.com/D0yqfkb.gif");
+	width:200px;
+    height:200px;
+	border: 1px solid transparent;
+}
+table, th, td
+{
+	border: 1px solid black;
+	padding: 10px;
+	border-collapse: collapse;
+	margin: 10px;
+}
+#heartSix, #heartSeven, #heartEight, #heartNine
+{
+	background-image: url("https://i.imgur.com/YhUcfbV.png");
+	height: 55.5px;
+	width: 55.5px;
+	float: left;
+}
+#heartOne, #heartTwo, #heartThree, #heartFour, #heartFive
+{
+	background-image: url("https://i.imgur.com/9xvcGAb.png");
+	height: 55.5px;
+	width: 55.5px;
+	float: left;
+}
+</style>
+<div id="container" onmousemove="showLiveCoordinates(event)"> 
+	<div id="box" class="ui-draggable" title="" style="position: relative; background-image: url(&quot;https://i.imgur.com/mpQuFg9.gif&quot;); left: 94px; top: 116px;">
+		<div id="tileOne" onmouseover="mouseHoverTileOne()"></div>
+		<div id="tileTwo" onmouseover="mouseHoverTileTwo()" onclick="selectRandomItem()"></div>
+		<p id="tileThree" onmouseover="mouseHoverTileThree()" onmousedown="mouseHoldingDown()" onmouseup="mouseRelease()" class="ui-draggable-handle"></p>
+		<div id="tileFour" onmouseover="mouseHoverTileFour()" onclick="eatRandomItem()"></div>
+		<div id="tileFive" onmouseover="mouseHoverTileFive()"></div>
+	</div>
+</div>
+<div id="heartContainer">
+	<div id="heartOne"></div>
+	<div id="heartTwo"></div>
+	<div id="heartThree"></div>
+	<div id="heartFour"></div>
+	<div id="heartFive"></div>
+	<div id="heartSix" style="background-image: url(&quot;https://i.imgur.com/YhUcfbV.png&quot;);"></div>
+	<div id="heartSeven"></div>
+	<div id="heartEight"></div>
+	<div id="heartNine"></div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="http://www.pages.drexel.edu/~mar528/jquery-ui.js"></script>
+<script>
+document.title = "Snail";
+var boxWidth = box.offsetWidth, boxHeight = box.offsetHeight, state = 0, item = 0, itemPicture = 0, happinessLevel = 5, oneHeartFlag = 0; //These are where SOME variables are initialized. An important thing to note here is that the default variable happinessLevel(measure of how happy the snail is) is equal to 5, it is in the middle of the possible snail happinessLevel values that are between 1 - 9 inclusive to start the snail in the most neautral state.
+$(function()
+{
+	{
+	$( "#box" ).draggable({ containment: "#container", handle: "p", cursorAt: { top: 100, left: 100 } }); //This line essentially establishes the box containing the image of the snail as draggable. It also establishes the boundary of where the snail can't be moved past, which is the outer box with a black border called the "container". It also makes it so when the snail is being dragged, it centers the image to the mouse location, this helps maintain the holding animation because the snail sometimes lags behind the mouse if it moves too fast, 'causing the snail to switch to a different animation while still being dragged around. To get the minimum possibility of this occuring, I centered the image with the mouse location when dragged. Lastly, it makes it so the snail could only be dragged by the <p> element. 
+	$( "div, p" ).disableSelection(); //This in conjunction of the previous line of code makes it so I cannot drag from from <div>, only <p>.
+	}
+});
+
+// Static Const initializer for animation URLs.
+var ANIMATIONS = {
+	"heartFix1": "url('https://i.imgur.com/qvenymW.gif')",
+	"heartFix2": "url('https://i.imgur.com/9xvcGAb.png')",
+
+	"heartBreak1": "url('https://i.imgur.com/JkTSn97.gif')",
+	"heartBreak2": "url('https://i.imgur.com/YhUcfbV.png')",
+
+	"snailHappy1": "url('https://i.imgur.com/mZj4EDY.gif')",
+	"snailHappy2": "url('https://i.imgur.com/tEM1Lid.gif')",
+
+	"snailSad1": "url('https://i.imgur.com/vLieIHZ.gif')",
+	"snailCrying": "url('https://i.imgur.com/YifRynD.gif')",
+
+	"snailRight": "url('https://i.imgur.com/UoeSMLt.gif')"
+}
+
+var ITEMS = {
+	'sodaCan': 'url(https://i.imgur.com/WebBp98.png), auto',
+	'skateboard': 'url(https://i.imgur.com/dLVREc7.png), auto',
+	'paintBucket': 'url(https://i.imgur.com/Sta0dFn.png), auto',
+	'miniSnail': 'url(https://i.imgur.com/yPKNe5s.png), auto',
+	'sword': 'url(https://i.imgur.com/AfkGnE9.png), auto',
+	'dynamite': 'url(https://i.imgur.com/XNpHmxM.png), auto',
+}
+
+var IDS = {
+	hearts: ["heartTwo",  "heartThree",
+			 "heartFour", "heartFive",
+			 "heartSix",  "heartSeven",
+			 "heartEight","heartNine"]
+}
+
+function selectRandomItem() //When the user clicks on the left portion of the snail, this is the function that is called. It essentially can only be clicked if the snail is not currently in a transitioning animation (state == 0) and if there is no item being currently held (item == 0). If both are true, It generates a random number between 1 - 6 inclusively ( variable itemPicture), because there are 6 if statements, each corresponding to a unique item picture to change the cursor image to. Although there are 6 unique item pictures, the value( variable item) of each item can only be 1 or 2. When the itemPicture is between 1 - 2 inclusive, the value equals 1. When the itemPicture is between 3 - 4 inclusive, the value is randomly generated, and can either be 1 or 2, 50/50 chance. When the itemPicture is between 5 - 6, the value is equal to 2.
+{	
+	if ((state == 0) && (item == 0))
+	{
+		itemPicture = Math.floor(Math.random() * 7);
+		if(itemPicture == 1)
+		{
+			item = 1;
+			//changes mouse cursor to SODA CAN PICTURE
+			$("body").css('cursor', ITEMS.sodaCan); 
+		}
+		if(itemPicture == 2)
+		{
+			item = 1;
+			//changes mouse cursor to SSKATEBOARD PICTURE
+			$("body").css('cursor', ITEMS.skateboard);
+		}
+		if(itemPicture == 3)
+		{
+			item = Math.floor(Math.random()*(2-1+1)+1);
+			//changes mouse cursor to SPAINT BUCKET PICTURE
+			$("body").css('cursor', ITEMS.paintBucket);
+		}
+		if(itemPicture == 4)
+		{
+			item = Math.floor(Math.random()*(2-1+1)+1);
+			//changes mouse cursor to SMINI SNAIL PICTURE
+			$("body").css('cursor', ITEMS.miniSnail);
+		}
+		if(itemPicture == 5)
+		{
+			item = 2;
+			//changes mouse cursor to SSWORD PICTURE
+			$("body").css('cursor', ITEMS.sword);
+		}
+		if(itemPicture == 6)
+		{
+			item = 2;
+			//changes mouse cursor to SDYNAMITE PICTURE
+			$("body").css('cursor', ITEMS.dynamite);
+		}
+	}
+}
+
+function eatRandomItem()//This function is called only when the right portion of the snail is clicked with an item being held. It sets the variable state equal to 1, this means that the snail is locked into a transitioning animation. The animation could either be the snail spazzing while chewing, or the snail comfortably chewing, which animation the snail displays is based on the value of the item. If the item value equals 1, the snail shows the comfortably chewing animation (HAPPY ANIMATION), then after 3000 milliseconds returns the heartAnimation function. If the item value equals 2, the snail shows the spazzing while chewing animation (SAD ANIMATION), then after 3000 milliseconds returns the cryingAnimation function. 
+{
+	// eatenItem can only ever be 1 or 2
+	if (item != 1 && item != 2) {
+		return;
+	}
+
+	$("body").css('cursor','default');
+
+	var singleHeartGif;
+	var snailAnimation;
+	var returnFunction;
+	var heartToChange;
+	if(item == 1)
+	{
+		snailAnimation = ANIMATIONS.snailHappy1; //HAPPY ANIMATION 1
+		returnFunction = heartAnimation;
+		happinessLevel++;
+		heartToChange = IDS.hearts[happinessLevel - 2];
+		singleHeartGif = ANIMATIONS.heartFix1;
+	}
+	else if (item == 2)
+	{
+		snailAnimation = ANIMATIONS.snailSad1; // SAD ANIMATION 1
+		returnFunction = cryingAnimation;
+		happinessLevel--;
+		heartToChange = IDS.hearts[happinessLevel - 1];
+		singleHeartGif = ANIMATIONS.heartBreak1;
+	}
+
+	document.getElementById(heartToChange).style.backgroundImage = singleHeartGif;
+	document.getElementById("box").style.backgroundImage = snailAnimation;
+	oneHeartFlag = happinessLevel == 1;
+
+	// Clamp between 1 ... 9
+	happinessLevel = Math.min(happinessLevel, 9);
+	happinessLevel = Math.max(happinessLevel, 1);
+		
+	state = 1;
+	item = 0;
+	return setTimeout(returnFunction, 3000); 
+}
+
+function cryingAnimation()//Animation for when the item makes the snail sad. This animation lasts 3000 milliseconds, then the changeStateToZero function is returned.
+{
+	document.getElementById("box").style.backgroundImage = ANIMATIONS.snailCrying; //SAD ANIMATION 2
+
+	if ((heartToChange >= 1) && (heartToChange < 9)) {
+		var heartToChange = IDS.hearts[happinessLevel - 1];
+		document.getElementById(heartToChange).style.backgroundImage = ANIMATIONS.heartBreak2;
+	}
+
+	return setTimeout(changeStateToZero, 3000); 
+}
+function heartAnimation()//Animation for when the item makes the snail happy. This animation lasts 3000 milliseconds, then the changeStateToZero function is returned.
+{
+	document.getElementById("box").style.backgroundImage = ANIMATIONS.snailHappy2; //HAPPY ANIMATION 2
+
+	if ((heartToChange > 1) && (heartToChange <= 9)) {
+		var heartToChange = IDS.hearts[happinessLevel - 2];
+		document.getElementById(heartToChange).style.backgroundImage = heartFix2;
+	}
+	
+	return setTimeout(changeStateToZero, 3000); 
+}
+function changeStateToZero()//Changes variable state value equal to 0. This means that the snail is not locked in a transitioning animation. Returns the mouseHoverTileThree function.
+{
+	state = 0;
+	return mouseHoverTileThree();
+}
+function mouseHoldingDown()//Changes the snail animation to the holding animation (animation when snail is being picked up and dragged around) when the mouse is being held down in the center portion of the snail.
+{
+	document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/5taLsyF.gif')";
+}
+function mouseRelease()//When mouse is released from being held, returns the mouseHoverTileThree function.
+{
+	return mouseHoverTileThree();
+}
+function showLiveCoordinates(event) //This function constantly updates variables as long as the mouse is within the boundaries of the container (the box containing the snail with the black border). It essentially gets the top left, top right, bottom left, and bottom right coordinates of the snail image picture relative to the top and left of the screen. These coordinates are used for establishing the conditions for unique animations when the mouse is within the container, but not on the snail image.
+{
+	var liveXCoordinateOfMousePosition = event.clientX; //retrieves live X coordinate.
+	var liveYCoordinateOfMousePosition = event.clientY; //retrieves live Y coordinate.
+	var boxTopAndLeftOffset = $("#box").offset(); //Allows retrieval of the top and left offset of the box
+	topLeftBoxXCoordinate = boxTopAndLeftOffset.left; //Top left box X coordinate.
+	topLeftBoxYCoordinate = boxTopAndLeftOffset.top; //Top left box Y coordinate.
+	topRightBoxXCoordinate = topLeftBoxXCoordinate + boxWidth; //Top right box X coordinate.
+	topRightBoxYCoordinate = topLeftBoxYCoordinate; //Top right box Y coordinate.
+	bottomLeftBoxXCoordinate = topLeftBoxXCoordinate; //Bottom left box X coordinate.
+	bottomLeftBoxYCoordinate = topLeftBoxYCoordinate + boxHeight; //Bottom left box Y coordinate.
+	bottomRightBoxXCoordinate = topLeftBoxXCoordinate + boxWidth; //Bottom right box X coordinate.
+	bottomRightBoxYCoordinate = topLeftBoxYCoordinate + boxHeight; //Bottom right box Y coordinate.
+
+	// Premature exit since following code only should run when state == 0
+	if (state != 0) {
+		return;
+	}
+
+	var leftBoxLeft = liveXCoordinateOfMousePosition < topLeftBoxXCoordinate;
+	var aboveBoxTop = liveYCoordinateOfMousePosition < topLeftBoxYCoordinate;
+	var belowBoxBottom = liveYCoordinateOfMousePosition > bottomLeftBoxYCoordinate;
+	var leftBoxRight = liveXCoordinateOfMousePosition < topRightBoxXCoordinate;
+
+	// Could be made much more compact with area partitioning and another animation array
+
+	if (leftBoxLeft) {
+		if(aboveBoxTop) //CONTAINER TILE ONE. If the mouse position is top left relative to the snail image.
+		{
+			document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/ZYhFaKm.gif')"; //LOOKING TOP LEFT ANIMATION
+		}
+		else if(belowBoxBottom) //CONTAINER TILE SEVEN. If the mouse position is bottom left relative to the snail image.
+		{
+			document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/TFv0Hvk.gif')"; //LOOKING BOTTOM LEFT
+		}
+		// Neither above or below => In center
+		else //CONTAINER TILE FOUR. If the mouse position is left relative to the snail picture.
+		{
+			document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/Yik0esk.gif')"; //LOOKING LEFT ANIMATION
+		}
+	}
+	// Else, right of box left
+	else {
+		var rightBoxRight = liveXCoordinateOfMousePosition > topRightBoxXCoordinate;
+		if (leftBoxRight) {
+			if(aboveBoxTop) //CONTAINER TILE TWO. If the mouse position is top relative to the snail image.
+			{
+				document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/E2t5bXK.gif')"; //LOOKING TOP ANIMATION
+			}
+			else if(belowBoxBottom) //CONTAINER TILE EIGHT. If the mouse position is bottom relative to the snail image.
+			{
+				document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/9tzqLp5.gif')"; //LOOKING BOTTOM ANIMATION
+			}
+			// Otherwise, within box, which means "neutral"
+			// TODO?
+		}
+		// Else, right of box right
+		else {
+			if(aboveBoxTop) //CONTAINER TILE THREE. If the mouse position is top right relative to the snail image.
+			{
+				document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/DqyOWbb.gif')"; //LOOKING TOP RIGHT ANIMATION
+			}
+			else if(belowBoxBottom) //CONTAINER TILE NINE. If the mouse position is bottom right relative to the snail image.
+			{
+				document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/KhYrFzL.gif')"; //LOOKING BOTTOM RIGHT ANIMATION
+			}
+			// Neither above or below => In center
+			else //CONTAINER TILE SIX. If the mouse position is right relative to the snail image.
+			{
+				document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/mpQuFg9.gif')"; //LOOKING RIGHT ANIMATION
+			}
+		}
+	}
+}
+function mouseHoverTileOne() //If top portion of the snail image is being hovered, and variable state equals 0.
+{
+	if (state == 0)
+	{
+		document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/7OQh8uZ.gif')"; //TOP SNAIL ANIMATION
+	}
+}
+function mouseHoverTileTwo() //If left portion of the snail image is being hovered, and variable state equals 0.
+{
+	if (state == 0)
+	{
+		document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/fBCRUe7.gif')"; //LEFT SNAIL ANIMATION
+	}
+}
+function mouseHoverTileThree() //If center portion of the snail image is being hoevered, and the variable state equals 0, display an animation based on the variable happinessLevel value.
+{
+	if (state == 0)
+	{	if(happinessLevel == 1)
+		{
+			document.getElementById("box").style.backgroundImage = ANIMATIONS.snailSad1; //EXTREME SADNESS ANIMATION
+		}
+		if((happinessLevel > 1) && (happinessLevel <= 3))
+		{
+			document.getElementById("box").style.backgroundImage = ANIMATIONS.snailCrying; //CRYING ANIMATION
+		}
+		if((happinessLevel >= 4) && (happinessLevel <= 6))
+		{
+			document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/D0yqfkb.gif')"; //NEUTRAL ANIMATION
+		}
+		if((happinessLevel >= 7) && (happinessLevel < 9))
+		{
+			document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/bQz4oSS.gif')"; //SMILING ANIMATION
+		}
+		if(happinessLevel == 9)
+		{
+			document.getElementById("box").style.backgroundImage = ANIMATIONS.snailHappy2; //EXTREME HAPPINESS ANIMATION
+		}
+	}
+}
+function mouseHoverTileFour() //If right portion of the snail image is being hovered, and variable state equals 0.
+{
+	if (state == 0)
+	{
+		document.getElementById("box").style.backgroundImage = ANIMATIONS.snailRight; //RIGHT SNAIL ANIMATION
+	}
+}
+function mouseHoverTileFive() //If bottom portion of the snail image is being hovered, and variable state equals 0.
+{
+	if (state == 0)
+	{
+		document.getElementById("box").style.backgroundImage = "url('https://i.imgur.com/q2XPBoO.gif')"; //BOTTOM SNAIL ANIMATION
+	}
+}
+</script>
+</body>
+</html>
